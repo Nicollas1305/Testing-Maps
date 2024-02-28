@@ -7,7 +7,7 @@ Flutter pub add geolocator
 
 ## Permissionamento do dispositivo
 ### <img src="https://lh3.googleusercontent.com/WyC9P3QnQMmIqp9TF5kJbNZxyX8SMhOtW9crxuClnYVeKMSPmf6qHLywz5dV0iu3SuJV_zbZlPlAIX535d5P8ht0AdHxFSfJiG3JjI1AXQ2dXpxT4g=s0" width="32"> Android
-Caminho: android / app / src / main / AndroidManifest.xml -> Dentro de ```<application> </application>```
+Diretório: android / app / src / main / AndroidManifest.xml -> Dentro de ```<application> </application>```
 ```md
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -16,7 +16,7 @@ Caminho: android / app / src / main / AndroidManifest.xml -> Dentro de ```<appli
 
 ### <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Apple_logo_grey.svg" width="15"> IOS
 
-Caminho: ios / Runner / info.plist -> Dentro de ```<dict> </dict>```
+Diretório: ios / Runner / info.plist -> Dentro de ```<dict> </dict>```
 ```md
 <key>NSLocationWhenInUseUsageDescription</key>
 <string>This app needs access to location when open.</string>
@@ -24,15 +24,17 @@ Caminho: ios / Runner / info.plist -> Dentro de ```<dict> </dict>```
 <string>This app needs access to location when in the background.</string>
 ```
 
-## Instalando o Google Maps para Flutter
+## <img src="https://cdn.icon-icons.com/icons2/2699/PNG/512/google_maps_logo_icon_171055.png" width="40"> Instalando dependências do Google Maps para o Flutter
 Android
-Caminho: android / app / src / main / AndroidManifest.xml
+
+- Diretório: android / app / src / main / AndroidManifest.xml
 ```md
 <meta-data android:name="com.google.android.geo.API_KEY" android:value="INSERIR_GOOGLE_MAPS_API_KEI" />
 ```
 
 IOS
-Caminho: ios / Runner / AppDelegate.swift -> dentro de Bool {}
+
+- Diretório: ios / Runner / AppDelegate.swift -> dentro de Bool {}
 ```swift
 import GoogleMaps
 GMSServices.provideAPIKey("INSERIR_GOOGLE_MAPS_API_KEI")

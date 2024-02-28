@@ -38,43 +38,43 @@ GMSServices.provideAPIKey("INSERIR_GOOGLE_MAPS_API_KEI")
 
 ## Outras permissões comuns para IOS
 #### Limited Photos
-```plist
+```md
 <key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key> 
 <true/>
 ```
 
 #### Camera
-```plist
+```md
 <key>NSCameraUsageDescription</key> 
 <string>$(PRODUCT_NAME) camera description.</string>
 ```
 #### Photos
-```plist
+```md
 <key>NSPhotoLibraryUsageDescription</key> 
 <string>$(PRODUCT_NAME)photos description.</string>
 ```
 #### Save Photos
-```plist
+```md
 <key>NSPhotoLibraryAddUsageDescription</key> 
 <string>$(PRODUCT_NAME) photos add description.</string>
 ```
 #### Location
-```plist
+```md
 <key> NSLocationWhenInUseUsageDescription</key>
 <string>$(PRODUCT_NAME) location description.</string>
 ```
 #### Apple Music
-```plist
+```md
 <key>NSAppleMusicUsageDescription</key>
 <string>$(PRODUCT_NAME) My description about why I need this capability</string>
 ```
 #### Calendar
-```plist
+```md
 <key>NSCalendarsUsageDescription</key>
 <string>$(PRODUCT_NAME) My description about why I need this capability</string>
 ```
 #### Siri
-```plist
+```md
 <key>NSSiriUsageDescription</key>
 <string>$(PRODUCT_NAME) My description about why I need this capability</string>
 ```

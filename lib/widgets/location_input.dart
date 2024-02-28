@@ -65,12 +65,12 @@ class _LocationInputState extends State<LocationInput> {
               children: [
                 Expanded(
                   child: Container(
-                    margin: EdgeInsets.all(10.0),
-                    padding: EdgeInsets.all(10.0),
+                    margin: const EdgeInsets.all(10.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Latitude'),
+                        const Text('Latitude'),
                         Text(_latitude.toString()),
                       ],
                     ),
@@ -83,12 +83,12 @@ class _LocationInputState extends State<LocationInput> {
                 ),
                 Expanded(
                   child: Container(
-                    margin: EdgeInsets.all(10.0),
-                    padding: EdgeInsets.all(10.0),
+                    margin: const EdgeInsets.all(10.0),
+                    padding: const EdgeInsets.all(10.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Longitude'),
+                        const Text('Longitude'),
                         Text(_longitude.toString()),
                       ],
                     ),

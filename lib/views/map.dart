@@ -44,15 +44,15 @@ class _MapScreenState extends State<MapScreen> {
         centerTitle: false,
         backgroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        title: Text("Mapa"),
+        title: const Text("Mapa"),
         actions: [
           IconButton(
-            icon: Icon(Icons.gps_fixed),
+            icon: const Icon(Icons.gps_fixed),
             onPressed: () {
               if (_mapController != null) {
                 _mapController.animateCamera(
@@ -83,7 +83,7 @@ class _MapScreenState extends State<MapScreen> {
         mapType: _mapType, // Visualização de satélite
         markers: {
           Marker(
-            markerId: MarkerId('userLocation'),
+            markerId: const MarkerId('userLocation'),
             position: LatLng(
                 widget.latitude, widget.longitude), // Posição do marcador
             icon: BitmapDescriptor.defaultMarker, // Ícone do marcador (padrão)
@@ -182,17 +182,17 @@ class _MapScreenState extends State<MapScreen> {
                   child: Container(
                     width: 50,
                     height: 50,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
                     ),
-                    child: Icon(Icons.add_location_alt_outlined,
+                    child: const Icon(Icons.add_location_alt_outlined,
                         color: Colors.black),
                   ),
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.black,
                   label: 'Incluir ponto',
-                  labelStyle: TextStyle(fontSize: 18.0),
+                  labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
                     // Lógica para incluir ponto
                   },
@@ -201,17 +201,17 @@ class _MapScreenState extends State<MapScreen> {
                   child: Container(
                     width: 50,
                     height: 50,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
                     ),
-                    child: Icon(Icons.mobile_screen_share_outlined,
+                    child: const Icon(Icons.mobile_screen_share_outlined,
                         color: Colors.black),
                   ),
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.black,
                   label: 'Importar Arquivo',
-                  labelStyle: TextStyle(fontSize: 18.0),
+                  labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
                     // Lógica para importar arquivo
                   },

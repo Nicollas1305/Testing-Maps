@@ -18,6 +18,7 @@ class _MapScreenState extends State<MapScreen> {
   late MapType _mapType;
   late String _previewImageUrlSatellite = '';
   late String _previewImageUrlTerrain = '';
+  late GoogleMapController _mapController;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: false,
         backgroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -48,7 +50,23 @@ class _MapScreenState extends State<MapScreen> {
           },
         ),
         title: Text("Mapa"),
-        actions: [],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.gps_fixed),
+            onPressed: () {
+              if (_mapController != null) {
+                _mapController.animateCamera(
+                  CameraUpdate.newCameraPosition(
+                    CameraPosition(
+                      target: LatLng(widget.latitude, widget.longitude),
+                      zoom: 18,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: GoogleMap(
         initialCameraPosition: CameraPosition(
@@ -56,6 +74,12 @@ class _MapScreenState extends State<MapScreen> {
               widget.latitude, widget.longitude), // Posição inicial do mapa
           zoom: 18, // Zoom inicial
         ),
+        onMapCreated: (controller) {
+          // Alteração aqui
+          setState(() {
+            _mapController = controller;
+          });
+        },
         mapType: _mapType, // Visualização de satélite
         markers: {
           Marker(

@@ -42,66 +42,73 @@ class _LocationInputState extends State<LocationInput> {
           ),
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: 1,
-            color: Colors.grey,
-          ),
-        ),
-        child: Column(
-          children: [
-            if (_previewImageUrl.isNotEmpty)
-              Container(
-                height: 120,
-                width: double.infinity,
-                child: Image.network(
-                  _previewImageUrl,
-                  fit: BoxFit.cover,
-                ),
+      child: Column(
+        children: [
+          if (_previewImageUrl.isNotEmpty)
+            SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: Image.network(
+                _previewImageUrl,
+                fit: BoxFit.cover,
               ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            ),
+          const SizedBox(
+            height: 12,
+          ),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                width: 1,
+                color: Colors.grey,
+              ),
+            ),
+            child: Column(
               children: [
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.all(10.0),
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Latitude'),
-                        Text(_latitude.toString()),
-                      ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.all(10.0),
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Latitude'),
+                            Text(_latitude.toString()),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Container(
-                  width: 1.0,
-                  height: 50.0, // Ajuste a altura conforme necessário
-                  color: Colors.grey,
-                ),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.all(10.0),
-                    padding: const EdgeInsets.all(10.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Longitude'),
-                        Text(_longitude.toString()),
-                      ],
+                    Container(
+                      width: 1.0,
+                      height: 50.0,
+                      color: Colors.grey,
                     ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.location_on),
-                  onPressed: _getCurrentPosition,
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.all(10.0),
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Longitude'),
+                            Text(_longitude.toString()),
+                          ],
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.location_on),
+                      onPressed: _getCurrentPosition,
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

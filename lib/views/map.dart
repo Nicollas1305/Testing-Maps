@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:testing_maps/utils/location_util.dart';
+import 'package:testing_maps/widgets/add_highlighter_dialog.dart';
 
 class MapScreen extends StatefulWidget {
   final double latitude;
@@ -194,7 +195,12 @@ class _MapScreenState extends State<MapScreen> {
                   label: 'Incluir ponto',
                   labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
-                    // Lógica para incluir ponto
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return const AddHighlighterDialog();
+                      },
+                    );
                   },
                 ),
                 SpeedDialChild(

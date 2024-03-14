@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:testing_maps/models/kml_exporter.dart';
+import 'package:testing_maps/models/marker.dart';
 import 'package:testing_maps/utils/location_util.dart';
 import 'package:testing_maps/widgets/add_highlighter_dialog.dart';
 
@@ -20,6 +24,8 @@ class _MapScreenState extends State<MapScreen> {
   late String _previewImageUrlSatellite = '';
   late String _previewImageUrlTerrain = '';
   late GoogleMapController _mapController;
+  LatLng _fixedMarkerPosition = const LatLng(0, 0);
+  List<MarkerModel> _markers = [];
 
   @override
   void initState() {
@@ -36,6 +42,69 @@ class _MapScreenState extends State<MapScreen> {
       latitude: widget.latitude,
       longitude: widget.longitude,
     );
+
+    print("latitude do widget: $widget.latitude");
+    print("longitude do widget: $widget.longitude");
+  }
+
+  void _adicionarMarcador(String nome, String cor, LatLng localizacao) {
+    setState(() {
+      _markers.add(MarkerModel(nome: nome, cor: cor, localizacao: localizacao));
+    });
+    print(_markers.length);
+    setState(() {});
+  }
+
+  // Método para construir marcadores no mapa
+  List<Marker> _buildMarkers() {
+    return _markers.map((marker) {
+      return Marker(
+        markerId: MarkerId(marker.nome),
+        position: marker.localizacao,
+        icon: BitmapDescriptor.defaultMarkerWithHue(_getColorHue(marker.cor)),
+      );
+    }).toList();
+  }
+
+  double _getColorHue(String color) {
+    switch (color) {
+      case 'Verde':
+        return BitmapDescriptor.hueGreen;
+      case 'Laranja':
+        return BitmapDescriptor.hueOrange;
+      case 'Azul':
+        return BitmapDescriptor.hueBlue;
+      case 'Vermelho':
+        return BitmapDescriptor.hueRed;
+      case 'Amarelo':
+        return BitmapDescriptor.hueYellow;
+      default:
+        return BitmapDescriptor.hueRed;
+    }
+  }
+
+  void _exportarArquivoKML(List<MarkerModel> markers) async {
+    final kmlBuilder = KMLBuilder();
+    markers.forEach((marker) {
+      kmlBuilder.addPlacemark(marker.nome, marker.localizacao.latitude,
+          marker.localizacao.longitude);
+    });
+
+    final xmlDoc = kmlBuilder.build();
+    final kmlString = xmlDoc.toXmlString(pretty: true);
+
+    final directory = Platform.isAndroid
+        ? await getExternalStorageDirectory()
+        : await getApplicationDocumentsDirectory();
+
+    final file = File('${directory!.path}/markers.kml');
+    print(file);
+    await file.writeAsString(kmlString);
+
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Arquivo KML exportado com sucesso!'),
+      duration: Duration(seconds: 2),
+    ));
   }
 
   @override
@@ -53,6 +122,18 @@ class _MapScreenState extends State<MapScreen> {
         title: const Text("Mapa"),
         actions: [
           IconButton(
+            icon: _mapType == MapType.normal
+                ? const Icon(Icons.layers_outlined)
+                : const Icon(Icons.layers),
+            onPressed: () {
+              setState(() {
+                _mapType = _mapType == MapType.normal
+                    ? MapType.satellite
+                    : MapType.normal;
+              });
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.gps_fixed),
             onPressed: () {
               if (_mapController != null) {
@@ -69,28 +150,52 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-      body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: LatLng(
-              widget.latitude, widget.longitude), // Posição inicial do mapa
-          zoom: 18, // Zoom inicial
-        ),
-        onMapCreated: (controller) {
-          // Alteração aqui
-          setState(() {
-            _mapController = controller;
-          });
-        },
-        mapType: _mapType, // Visualização de satélite
-        markers: {
-          Marker(
-            markerId: const MarkerId('userLocation'),
-            position: LatLng(
-                widget.latitude, widget.longitude), // Posição do marcador
-            icon: BitmapDescriptor.defaultMarker, // Ícone do marcador (padrão)
+      body: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: LatLng(
+                widget.latitude,
+                widget.longitude,
+              ),
+              zoom: 18,
+            ),
+            onMapCreated: (controller) {
+              setState(() {
+                _mapController = controller;
+              });
+            },
+            mapType: _mapType,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            onTap: (latLng) {
+              setState(() {
+                _fixedMarkerPosition = latLng;
+              });
+            },
+            onCameraMove: (CameraPosition position) {
+              setState(() {
+                _fixedMarkerPosition = position.target;
+              });
+            },
+            markers: Set.from(_buildMarkers()),
           ),
-        },
-        myLocationButtonEnabled: false, // Desabilita o botão de GPS
+          Positioned(
+            top: (MediaQuery.of(context).size.height -
+                    kToolbarHeight -
+                    kToolbarHeight) /
+                2,
+            left: (MediaQuery.of(context).size.width - 10) / 2,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(right: 10.0, bottom: 10.0),
@@ -99,7 +204,8 @@ class _MapScreenState extends State<MapScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             SpeedDial(
-              icon: Icons.layers,
+              icon: Icons.layers_outlined,
+              //icon: Icons.layers,
               activeIcon: Icons.close,
               backgroundColor: Colors.grey,
               foregroundColor: Colors.white,
@@ -114,8 +220,9 @@ class _MapScreenState extends State<MapScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: Colors.white,
-                          width: 2), // Adiciona a borda branca
+                        color: Colors.white,
+                        width: 2,
+                      ),
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -126,11 +233,10 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  backgroundColor:
-                      Colors.transparent, // Cor de fundo transparente
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   label: 'Mapa',
-                  labelStyle: TextStyle(fontSize: 18.0),
+                  labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
                     setState(() {
                       _mapType = MapType.normal;
@@ -144,8 +250,9 @@ class _MapScreenState extends State<MapScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: Colors.white,
-                          width: 2), // Adiciona a borda branca
+                        color: Colors.white,
+                        width: 2,
+                      ),
                     ),
                     child: ClipOval(
                       child: Image.network(
@@ -156,11 +263,10 @@ class _MapScreenState extends State<MapScreen> {
                       ),
                     ),
                   ),
-                  backgroundColor:
-                      Colors.transparent, // Cor de fundo transparente
+                  backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
                   label: 'Satélite',
-                  labelStyle: TextStyle(fontSize: 18.0),
+                  labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
                     setState(() {
                       _mapType = MapType.satellite;
@@ -198,7 +304,14 @@ class _MapScreenState extends State<MapScreen> {
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
-                        return const AddHighlighterDialog();
+                        return AddHighlighterDialog(
+                          userLocation: LatLng(
+                            widget.latitude,
+                            widget.longitude,
+                          ),
+                          fixedMarkerLocation: _fixedMarkerPosition,
+                          adicionarMarcador: _adicionarMarcador,
+                        );
                       },
                     );
                   },
@@ -220,6 +333,27 @@ class _MapScreenState extends State<MapScreen> {
                   labelStyle: const TextStyle(fontSize: 18.0),
                   onTap: () {
                     // Lógica para importar arquivo
+                  },
+                ),
+                SpeedDialChild(
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                    child: const Icon(
+                      Icons.edit_document,
+                      color: Colors.black,
+                    ),
+                  ),
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.black,
+                  label: 'Exportar Arquivo',
+                  labelStyle: const TextStyle(fontSize: 18.0),
+                  onTap: () {
+                    _exportarArquivoKML(_markers);
                   },
                 ),
               ],

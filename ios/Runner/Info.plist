@@ -51,5 +51,11 @@
 	<string>This app needs access to location when in the background.</string>
 	<key>GoogleMapsApiKey</key>
 	<string>AIzaSyBvJ4YZ-lW4s5Flr6rwn-sfEHd-0Ad5KiU</string>
+	<key>NSFileProtectionKey</key>
+	<string>NSFileProtectionComplete</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need access to save files to your downloads folder.</string>
+	<key>NSDocumentsDirectory</key>
+	<string>This app needs access to documents when open.</string>
 </dict>
 </plist>

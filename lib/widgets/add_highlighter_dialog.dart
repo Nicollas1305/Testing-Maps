@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AddHighlighterDialog extends StatefulWidget {
-  const AddHighlighterDialog({Key? key}) : super(key: key);
+  final LatLng userLocation;
+  final LatLng fixedMarkerLocation;
+  final Function(String, String, LatLng) adicionarMarcador;
+
+  const AddHighlighterDialog({
+    Key? key,
+    required this.userLocation,
+    required this.fixedMarkerLocation,
+    required this.adicionarMarcador,
+  }) : super(key: key);
 
   @override
   _AddHighlighterDialogState createState() => _AddHighlighterDialogState();
 }
 
 class _AddHighlighterDialogState extends State<AddHighlighterDialog> {
-  String _selectedColor = 'Azul';
+  String _selectedColor = 'Verde';
   String _selectedPosition = 'Atual';
   final TextEditingController _nomeController = TextEditingController();
 
@@ -28,133 +38,167 @@ class _AddHighlighterDialogState extends State<AddHighlighterDialog> {
           ],
         ),
       ),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            'Nome',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey),
+      content: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.5,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Nome',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            child: TextField(
-              controller: _nomeController,
-              decoration: const InputDecoration(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                border: InputBorder.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Posição',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          Column(
-            children: [
-              Row(
-                children: [
-                  Radio<String>(
-                    value: 'Atual',
-                    groupValue: _selectedPosition,
-                    onChanged: (String? value) {
-                      setState(() {
-                        _selectedPosition = value!;
-                      });
-                    },
-                  ),
-                  const Text('Atual'),
-                ],
-              ),
-              Row(
-                children: [
-                  Radio<String>(
-                    value: 'Indicar na tela',
-                    groupValue: _selectedPosition,
-                    onChanged: (String? value) {
-                      setState(() {
-                        _selectedPosition = value!;
-                      });
-                    },
-                  ),
-                  const Text('Indicar na tela'),
-                ],
-              )
-            ],
-          ),
-          const Text(
-            'Marcador',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          DropdownButtonFormField<String>(
-            // TODO: 'Validar hint text',
-            hint: const Text('Selecione uma cor'),
-            value: _selectedColor,
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedColor = newValue!;
-              });
-            },
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
+            const SizedBox(height: 10),
+            Container(
+              decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+              child: TextField(
+                controller: _nomeController,
+                decoration: const InputDecoration(
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  border: InputBorder.none,
+                ),
+              ),
             ),
-            items: const [
-              DropdownMenuItem<String>(
-                value: 'Azul',
-                child: Row(
+            const SizedBox(height: 10),
+            const Text(
+              'Posição',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Column(
+              children: [
+                Row(
                   children: [
-                    Icon(Icons.place, color: Colors.blue),
-                    SizedBox(width: 10),
-                    Text('Azul'),
+                    Radio<String>(
+                      value: 'Atual',
+                      groupValue: _selectedPosition,
+                      onChanged: (String? value) {
+                        setState(() {
+                          _selectedPosition = value!;
+                        });
+                      },
+                    ),
+                    const Text('Atual'),
                   ],
                 ),
-              ),
-              DropdownMenuItem<String>(
-                value: 'Vermelho',
-                child: Row(
+                Row(
                   children: [
-                    Icon(Icons.place, color: Colors.red),
-                    SizedBox(width: 10),
-                    Text('Vermelho'),
+                    Radio<String>(
+                      value: 'Indicar na tela',
+                      groupValue: _selectedPosition,
+                      onChanged: (String? value) {
+                        setState(() {
+                          _selectedPosition = value!;
+                        });
+                      },
+                    ),
+                    const Text('Indicar na tela'),
                   ],
+                )
+              ],
+            ),
+            const Text(
+              'Marcador',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            DropdownButtonFormField<String>(
+              hint: const Text('Selecione uma cor'),
+              value: _selectedColor,
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedColor = newValue!;
+                });
+              },
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
-              DropdownMenuItem<String>(
-                value: 'Amarelo',
-                child: Row(
-                  children: [
-                    Icon(Icons.place, color: Colors.yellow),
-                    SizedBox(width: 10),
-                    Text('Amarelo'),
-                  ],
+              items: const [
+                DropdownMenuItem<String>(
+                  value: 'Verde',
+                  child: Row(
+                    children: [
+                      Icon(Icons.place, color: Colors.greenAccent),
+                      SizedBox(width: 10),
+                      Text('Verde'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                DropdownMenuItem<String>(
+                  value: 'Laranja',
+                  child: Row(
+                    children: [
+                      Icon(Icons.place, color: Colors.orange),
+                      SizedBox(width: 10),
+                      Text('Laranja'),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'Azul',
+                  child: Row(
+                    children: [
+                      Icon(Icons.place, color: Colors.blue),
+                      SizedBox(width: 10),
+                      Text('Azul'),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'Vermelho',
+                  child: Row(
+                    children: [
+                      Icon(Icons.place, color: Colors.red),
+                      SizedBox(width: 10),
+                      Text('Vermelho'),
+                    ],
+                  ),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'Amarelo',
+                  child: Row(
+                    children: [
+                      Icon(Icons.place, color: Colors.yellow),
+                      SizedBox(width: 10),
+                      Text('Amarelo'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
       actions: [
         ElevatedButton(
           onPressed: () {
+            final String nome = _nomeController.text;
+            final String selectedColor = _selectedColor;
+            final String selectedPosition = _selectedPosition;
+            final LatLng localizacao = selectedPosition == 'Atual'
+                ? LatLng(
+                    widget.userLocation.latitude, widget.userLocation.longitude)
+                : widget.fixedMarkerLocation;
+
+            widget.adicionarMarcador(nome, selectedColor, localizacao);
+
+            // Fechar o diálogo
             Navigator.of(context).pop();
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
             minimumSize: const Size(double.infinity, 50),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
+              borderRadius: BorderRadius.circular(3.0),
             ),
           ),
-          child: const Text("Incluir"),
+          child: const Text("Incluir", style: TextStyle(color: Colors.white)),
         ),
       ],
     );

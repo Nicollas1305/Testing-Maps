@@ -7,6 +7,8 @@ import 'package:testing_maps/models/kml_exporter.dart';
 import 'package:testing_maps/models/marker.dart';
 import 'package:testing_maps/utils/location_util.dart';
 import 'package:testing_maps/widgets/add_highlighter_dialog.dart';
+import 'package:testing_maps/widgets/floating_top_bar.dart';
+import 'package:testing_maps/widgets/floating_vertical_card.dart';
 
 class MapScreen extends StatefulWidget {
   final double latitude;
@@ -101,10 +103,12 @@ class _MapScreenState extends State<MapScreen> {
     print(file);
     await file.writeAsString(kmlString);
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Arquivo KML exportado com sucesso!'),
-      duration: Duration(seconds: 2),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Arquivo KML exportado com sucesso!'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -121,6 +125,10 @@ class _MapScreenState extends State<MapScreen> {
         ),
         title: const Text("Mapa"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.gps_fixed_outlined),
+            onPressed: () {},
+          ),
           IconButton(
             icon: _mapType == MapType.normal
                 ? const Icon(Icons.layers_outlined)
@@ -147,6 +155,32 @@ class _MapScreenState extends State<MapScreen> {
                 );
               }
             },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'Adicionar marcador') {
+                // Lógica para adicionar marcador
+              } else if (value == 'Importar .KML') {
+                // Lógica para importar .KML
+              } else if (value == 'Exportar .KML') {
+                // Lógica para exportar .KML
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'Adicionar marcador',
+                child: Text('Adicionar marcador'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'Importar .KML',
+                child: Text('Importar .KML'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'Exportar .KML',
+                child: Text('Exportar .KML'),
+              ),
+            ],
           ),
         ],
       ),
@@ -194,6 +228,17 @@ class _MapScreenState extends State<MapScreen> {
                 color: Colors.white,
               ),
             ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.01,
+            left: MediaQuery.of(context).size.width * 0.03,
+            right: MediaQuery.of(context).size.width * 0.03,
+            child: FloatingTopBar(),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.07,
+            left: MediaQuery.of(context).size.width * 0.03,
+            child: FloatingVerticalCard(),
           ),
         ],
       ),

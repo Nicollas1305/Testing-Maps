@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class AddHighlighterDialog extends StatefulWidget {
+class AddMarkerDialog extends StatefulWidget {
   final LatLng userLocation;
   final LatLng fixedMarkerLocation;
   final Function(String, String, LatLng) adicionarMarcador;
 
-  const AddHighlighterDialog({
+  const AddMarkerDialog({
     Key? key,
     required this.userLocation,
     required this.fixedMarkerLocation,
@@ -17,8 +17,8 @@ class AddHighlighterDialog extends StatefulWidget {
   _AddHighlighterDialogState createState() => _AddHighlighterDialogState();
 }
 
-class _AddHighlighterDialogState extends State<AddHighlighterDialog> {
-  String _selectedColor = 'Verde';
+class _AddHighlighterDialogState extends State<AddMarkerDialog> {
+  String _selectedColor = 'Laranja';
   String _selectedPosition = 'Atual';
   final TextEditingController _nomeController = TextEditingController();
 
@@ -120,16 +120,6 @@ class _AddHighlighterDialogState extends State<AddHighlighterDialog> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               ),
               items: const [
-                DropdownMenuItem<String>(
-                  value: 'Verde',
-                  child: Row(
-                    children: [
-                      Icon(Icons.place, color: Colors.greenAccent),
-                      SizedBox(width: 10),
-                      Text('Verde'),
-                    ],
-                  ),
-                ),
                 DropdownMenuItem<String>(
                   value: 'Laranja',
                   child: Row(

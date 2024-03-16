@@ -44,6 +44,38 @@ class _LocationInputState extends State<LocationInput> {
       },
       child: Column(
         children: [
+          if (!_previewImageUrl.isNotEmpty)
+            Container(
+              width: MediaQuery.of(context).size.width,
+              height: 120,
+              color: Colors.grey[400],
+              child: InkWell(
+                onTap: () async {},
+                child: const Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Adicionar Marcador',
+                        style: TextStyle(
+                            fontFamily: 'Lato',
+                            fontWeight: FontWeight.normal,
+                            color: Colors.white,
+                            fontSize: 15),
+                      ),
+                      SizedBox(
+                        width: 7,
+                      ),
+                      Icon(
+                        Icons.add_location_alt_outlined,
+                        color: Colors.white,
+                        size: 15,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
           if (_previewImageUrl.isNotEmpty)
             SizedBox(
               height: 120,

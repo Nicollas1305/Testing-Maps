@@ -1,0 +1,31 @@
+Preciso fazer uma refatoração nesse widget da tela home.
+import 'package:flutter/material.dart';
+import 'package:testing_maps/widgets/location_input.dart';
+
+class Home extends StatelessWidget {
+  const Home({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("Home"),
+      ),
+      body: const Padding(
+        padding: EdgeInsets.all(14),
+        child: Column(
+          children: [
+            LocationInput(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+Fiz mais ou menos, até então está improvisado. quero que seja da seguinte forma:
+
+Ao abrir a home irá exibir este container com o texto Adicionar Marcador, mas ao clicar no botão location_on não irá alterar para a visualização de mapa, apenas exibir a longitude e latitude, quando clicar no Adicionar marcador e navegar até a tela de mapas, e adicionar o marcador. quando retornar para a tela aí sim irá alterar de Adicionar Marcador para a visualização de mapa.
+

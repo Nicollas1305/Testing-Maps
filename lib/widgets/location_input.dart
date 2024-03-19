@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+import 'package:testing_maps/providers/marker.dart';
 import 'package:testing_maps/utils/location_util.dart';
 import 'package:testing_maps/views/map.dart';
 
@@ -11,137 +12,126 @@ class LocationInput extends StatefulWidget {
 }
 
 class _LocationInputState extends State<LocationInput> {
-  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
-  late String _previewImageUrl = '';
-  late double _latitude = 0.0;
-  late double _longitude = 0.0;
-
-  Future<void> _getCurrentPosition() async {
-    final position = await _geolocatorPlatform.getCurrentPosition();
-
-    setState(() {
-      _latitude = position.latitude;
-      _longitude = position.longitude;
-      _previewImageUrl = LocationUtil.generateLocationPreviewImage(
-        latitude: _latitude,
-        longitude: _longitude,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => MapScreen(
-              latitude: _latitude,
-              longitude: _longitude,
-            ),
-          ),
-        );
-      },
-      child: Column(
-        children: [
-          if (!_previewImageUrl.isNotEmpty)
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: 120,
-              color: Colors.grey[400],
-              child: InkWell(
-                onTap: () async {},
-                child: const Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Adicionar Marcador',
-                        style: TextStyle(
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.normal,
-                            color: Colors.white,
-                            fontSize: 15),
-                      ),
-                      SizedBox(
-                        width: 7,
-                      ),
-                      Icon(
-                        Icons.add_location_alt_outlined,
-                        color: Colors.white,
-                        size: 15,
-                      )
-                    ],
+    final markerState = Provider.of<MarkerState>(context);
+
+    return Column(
+      children: [
+        if (markerState.markers.isEmpty)
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: 120,
+            color: Colors.grey[400],
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MapScreen(
+                      onMarkerAdded: (marker) {
+                        markerState.addMarker(marker);
+                      },
+                    ),
                   ),
+                );
+              },
+              child: const Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Adicionar Marcador',
+                      style: TextStyle(
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.normal,
+                        color: Colors.black,
+                        fontSize: 18,
+                      ),
+                    ),
+                    SizedBox(width: 7),
+                    Icon(
+                      Icons.add_location_alt_outlined,
+                      color: Colors.black,
+                      size: 18,
+                    )
+                  ],
                 ),
               ),
             ),
-          if (_previewImageUrl.isNotEmpty)
-            SizedBox(
-              height: 120,
-              width: double.infinity,
-              child: Image.network(
-                _previewImageUrl,
-                fit: BoxFit.cover,
-              ),
-            ),
-          const SizedBox(
-            height: 12,
           ),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                width: 1,
-                color: Colors.grey,
+        if (markerState.markers.isNotEmpty)
+          Column(
+            children: [
+              SizedBox(
+                height: 120,
+                width: double.infinity,
+                child: Image.network(
+                  LocationUtil.generateLocationPreviewImage(
+                    latitude: markerState.markers.first.localizacao.latitude,
+                    longitude: markerState.markers.first.localizacao.longitude,
+                  ),
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 12),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 1,
+                    color: Colors.grey,
+                  ),
+                ),
+                child: Column(
                   children: [
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.all(10.0),
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Latitude'),
-                            Text(_latitude.toString()),
-                          ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Latitude'),
+                                Text(
+                                  markerState.markers.first.localizacao.latitude
+                                      .toString(),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Container(
-                      width: 1.0,
-                      height: 50.0,
-                      color: Colors.grey,
-                    ),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.all(10.0),
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Longitude'),
-                            Text(_longitude.toString()),
-                          ],
+                        Container(
+                          width: 1.0,
+                          height: 50.0,
+                          color: Colors.grey,
                         ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.location_on),
-                      onPressed: _getCurrentPosition,
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.all(10.0),
+                            padding: const EdgeInsets.all(10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Longitude'),
+                                Text(
+                                  markerState
+                                      .markers.first.localizacao.longitude
+                                      .toString(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+      ],
     );
   }
 }

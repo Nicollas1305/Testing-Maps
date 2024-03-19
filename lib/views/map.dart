@@ -1,20 +1,18 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:testing_maps/models/kml_exporter.dart';
+import 'package:provider/provider.dart';
 import 'package:testing_maps/models/marker.dart';
+import 'package:testing_maps/providers/marker.dart';
 import 'package:testing_maps/widgets/add_marker_dialog.dart';
 import 'package:testing_maps/widgets/add_main_marker_dialog.dart';
 import 'package:testing_maps/widgets/floating_top_bar.dart';
 import 'package:testing_maps/widgets/floating_vertical_card.dart';
 
 class MapScreen extends StatefulWidget {
-  final double latitude;
-  final double longitude;
+  final void Function(MarkerModel) onMarkerAdded;
 
-  const MapScreen({Key? key, required this.latitude, required this.longitude})
-      : super(key: key);
+  const MapScreen({Key? key, required this.onMarkerAdded}) : super(key: key);
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -24,46 +22,35 @@ class _MapScreenState extends State<MapScreen> {
   late MapType _mapType;
   late GoogleMapController _mapController;
   LatLng _fixedMarkerPosition = const LatLng(0, 0);
-  final List<MarkerModel> _markers = [];
   bool isAddingMarker = true;
-  late CameraPosition _cameraPosition;
-  late double _currentZoom = 18;
+  CameraPosition? _cameraPosition;
+  late final double _currentZoom = 18;
+  late final double _currentBearing = 0;
+  late double _latitude = 0.0;
+  late double _longitude = 0.0;
   double _mapRotationAngle = 0.0;
+  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
 
   @override
   void initState() {
     super.initState();
+    _getCurrentPosition();
     _mapType = MapType.satellite;
-    _cameraPosition = CameraPosition(
-      target: LatLng(widget.latitude, widget.longitude),
-      zoom: 18,
-      bearing: 0,
-    );
   }
 
-  void _adicionarMarcador(String nome, String cor, LatLng localizacao) {
+  Future<void> _getCurrentPosition() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    final position = await _geolocatorPlatform.getCurrentPosition();
+
     setState(() {
-      _markers.add(MarkerModel(nome: nome, cor: cor, localizacao: localizacao));
-    });
-    print(_markers.length);
-    setState(() {});
-  }
-
-  void _removerMarcador(String nome) {
-    setState(() {
-      _markers.removeWhere((marker) => marker.nome == nome);
-    });
-  }
-
-  // Método para construir marcadores no mapa
-  List<Marker> _buildMarkers() {
-    return _markers.map((marker) {
-      return Marker(
-        markerId: MarkerId(marker.nome),
-        position: marker.localizacao,
-        icon: BitmapDescriptor.defaultMarkerWithHue(_getColorHue(marker.cor)),
+      _latitude = position.latitude;
+      _longitude = position.longitude;
+      _cameraPosition = CameraPosition(
+        target: LatLng(_latitude, _longitude),
+        zoom: _currentZoom,
+        bearing: _currentBearing,
       );
-    }).toList();
+    });
   }
 
   double _getColorHue(String color) {
@@ -83,34 +70,10 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _exportarArquivoKML(List<MarkerModel> markers) async {
-    final kmlBuilder = KMLBuilder();
-    markers.forEach((marker) {
-      kmlBuilder.addPlacemark(marker.nome, marker.localizacao.latitude,
-          marker.localizacao.longitude);
-    });
-
-    final xmlDoc = kmlBuilder.build();
-    final kmlString = xmlDoc.toXmlString(pretty: true);
-
-    final directory = Platform.isAndroid
-        ? await getExternalStorageDirectory()
-        : await getApplicationDocumentsDirectory();
-
-    final file = File('${directory!.path}/markers.kml');
-    print(file);
-    await file.writeAsString(kmlString);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Arquivo KML exportado com sucesso!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final markerState = Provider.of<MarkerState>(context);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
@@ -162,11 +125,12 @@ class _MapScreenState extends State<MapScreen> {
             icon: const Icon(Icons.gps_fixed),
             onPressed: () {
               if (_mapController != null) {
+                print(_currentZoom);
                 _mapController.animateCamera(
                   CameraUpdate.newCameraPosition(
                     CameraPosition(
-                      target: LatLng(widget.latitude, widget.longitude),
-                      zoom: 18,
+                      target: LatLng(_latitude, _longitude),
+                      zoom: _currentZoom,
                     ),
                   ),
                 );
@@ -182,18 +146,29 @@ class _MapScreenState extends State<MapScreen> {
                   builder: (BuildContext context) {
                     return AddMarkerDialog(
                       userLocation: LatLng(
-                        widget.latitude,
-                        widget.longitude,
+                        _latitude,
+                        _longitude,
                       ),
                       fixedMarkerLocation: _fixedMarkerPosition,
-                      adicionarMarcador: _adicionarMarcador,
+                      adicionarMarcador: (nome, cor, localizacao) {
+                        final marker = MarkerModel(
+                          nome: nome,
+                          cor: cor,
+                          localizacao: localizacao,
+                        );
+                        markerState.addMarker(marker);
+                        print(markerState.markers.length);
+                        setState(() {
+                          _fixedMarkerPosition = localizacao;
+                        });
+                      },
                     );
                   },
                 );
               } else if (value == 'Importar .KML') {
                 // Lógica para importar .KML
               } else if (value == 'Exportar .KML') {
-                _exportarArquivoKML(_markers);
+                markerState.exportMarkersAsKML(context);
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -213,62 +188,77 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: _cameraPosition,
-            onMapCreated: (controller) {
-              setState(() {
-                _mapController = controller;
-              });
-            },
-            mapType: _mapType,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            compassEnabled: false,
-            onCameraMove: (CameraPosition position) {
-              setState(() {
-                _fixedMarkerPosition = position.target;
-                _currentZoom = position.zoom;
-                _mapRotationAngle = position.bearing * (3.14 / 180);
-                print(_mapRotationAngle);
-              });
-            },
-            markers: Set.from(_buildMarkers()),
-          ),
-          Positioned(
-            top: (MediaQuery.of(context).size.height -
-                    kToolbarHeight -
-                    kToolbarHeight) /
-                2,
-            left: (MediaQuery.of(context).size.width - 10) / 2,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _mapType == MapType.normal ? Colors.black : Colors.white,
-              ),
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.012,
-            left: MediaQuery.of(context).size.width * 0.03,
-            right: MediaQuery.of(context).size.width * 0.03,
-            child: FloatingTopBar(
-              mapType: _mapType,
-              rotationAngle: _mapRotationAngle,
-            ),
-          ),
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.1,
-            left: MediaQuery.of(context).size.width * 0.03,
-            child: FloatingVerticalCard(
-              mapType: _mapType,
-            ),
-          ),
-        ],
-      ),
+      body: _latitude != 0 && _longitude != 0
+          ? Stack(
+              children: [
+                GoogleMap(
+                  initialCameraPosition: _cameraPosition ??
+                      const CameraPosition(target: LatLng(0, 0)),
+                  onMapCreated: (controller) {
+                    setState(() {
+                      _mapController = controller;
+                    });
+                  },
+                  mapType: _mapType,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: false,
+                  onCameraMove: (CameraPosition position) {
+                    setState(() {
+                      _fixedMarkerPosition = position.target;
+                      // TODO: adicionar outra forma de pegar atualização do zoom
+                      //_currentZoom = position.zoom;
+                      _mapRotationAngle = position.bearing * (3.14 / 180);
+                      print(_mapRotationAngle);
+                    });
+                  },
+                  markers: Set.from(
+                    markerState.markers.map(
+                      (marker) {
+                        return Marker(
+                          markerId: MarkerId(marker.nome),
+                          position: marker.localizacao,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: (MediaQuery.of(context).size.height -
+                          kToolbarHeight -
+                          kToolbarHeight) /
+                      2,
+                  left: (MediaQuery.of(context).size.width - 10) / 2,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _mapType == MapType.normal
+                          ? Colors.black
+                          : Colors.white,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).size.height * 0.012,
+                  left: MediaQuery.of(context).size.width * 0.03,
+                  right: MediaQuery.of(context).size.width * 0.03,
+                  child: FloatingTopBar(
+                    mapType: _mapType,
+                    rotationAngle: _mapRotationAngle,
+                  ),
+                ),
+                Positioned(
+                  top: MediaQuery.of(context).size.height * 0.1,
+                  left: MediaQuery.of(context).size.width * 0.03,
+                  child: FloatingVerticalCard(
+                    mapType: _mapType,
+                  ),
+                ),
+              ],
+            )
+          : const Center(child: CircularProgressIndicator()),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           if (isAddingMarker) {
@@ -276,17 +266,27 @@ class _MapScreenState extends State<MapScreen> {
               context: context,
               builder: (BuildContext context) {
                 return AddMainMarkerDialog(
-                  userLocation: LatLng(widget.latitude, widget.longitude),
+                  userLocation: LatLng(_latitude, _longitude),
                   fixedMarkerLocation: _fixedMarkerPosition,
-                  adicionarMarcador: _adicionarMarcador,
+                  adicionarMarcador: (nome, cor, localizacao) {
+                    final marker = MarkerModel(
+                      nome: nome,
+                      cor: cor,
+                      localizacao: localizacao,
+                    );
+                    markerState.addMarker(marker);
+                    setState(() {
+                      _fixedMarkerPosition = localizacao;
+                    });
+                  },
                 );
               },
             );
             isAddingMarker = false;
           } else {
-            if (_markers.isNotEmpty) {
+            if (markerState.markers.isNotEmpty) {
               isAddingMarker = true;
-              _removerMarcador("identificaçãoMarcadorPrincipal");
+              markerState.removeMarker(markerState.markers.first.nome);
             }
           }
         },

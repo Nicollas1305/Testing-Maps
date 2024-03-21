@@ -204,6 +204,7 @@ class _MapScreenState extends State<MapScreen> {
                       _fixedMarkerPosition = position.target;
                       // TODO: adicionar outra forma de pegar atualização do zoom
                       _currentZoom = position.zoom;
+                      print(_currentZoom);
                       _mapRotationAngle = position.bearing * (3.14 / 180);
                     });
                   },
@@ -267,6 +268,7 @@ class _MapScreenState extends State<MapScreen> {
                   child: FloatingTopBar(
                     mapType: _mapType,
                     rotationAngle: _mapRotationAngle,
+                    zoom: _currentZoom,
                   ),
                 ),
                 Positioned(

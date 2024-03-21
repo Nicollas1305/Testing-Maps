@@ -87,6 +87,7 @@ class MarkerState extends ChangeNotifier {
     final xmlDoc = kmlBuilder.build();
     final kmlString = xmlDoc.toXmlString(pretty: true);
 
+    // TODO: atualizar diretorio download.
     final directory = Platform.isAndroid
         ? await getExternalStorageDirectory()
         : await getApplicationDocumentsDirectory();
@@ -149,7 +150,7 @@ class MarkerState extends ChangeNotifier {
           }).toList();
           final line = LineModel(
             name: name,
-            color: 'TODO',// TODO: Adicionar cor a linha
+            color: 'TODO', // TODO: Adicionar cor a linha
             coordinates: points,
           );
           addLine(line);

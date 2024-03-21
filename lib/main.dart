@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:testing_maps/providers/marker.dart';
+import 'package:testing_maps/providers/marker_provider.dart';
 import 'package:testing_maps/views/home.dart';
 
 void main() {

@@ -18,7 +18,6 @@ class AddMarkerDialog extends StatefulWidget {
 }
 
 class _AddHighlighterDialogState extends State<AddMarkerDialog> {
-  String _selectedColor = 'Laranja';
   String _selectedPosition = 'Atual';
   final TextEditingController _nomeController = TextEditingController();
 
@@ -101,67 +100,6 @@ class _AddHighlighterDialogState extends State<AddMarkerDialog> {
                 )
               ],
             ),
-            const Text(
-              'Marcador',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            DropdownButtonFormField<String>(
-              hint: const Text('Selecione uma cor'),
-              value: _selectedColor,
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedColor = newValue!;
-                });
-              },
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-              ),
-              items: const [
-                DropdownMenuItem<String>(
-                  value: 'Laranja',
-                  child: Row(
-                    children: [
-                      Icon(Icons.place, color: Colors.orange),
-                      SizedBox(width: 10),
-                      Text('Laranja'),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'Azul',
-                  child: Row(
-                    children: [
-                      Icon(Icons.place, color: Colors.blue),
-                      SizedBox(width: 10),
-                      Text('Azul'),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'Vermelho',
-                  child: Row(
-                    children: [
-                      Icon(Icons.place, color: Colors.red),
-                      SizedBox(width: 10),
-                      Text('Vermelho'),
-                    ],
-                  ),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'Amarelo',
-                  child: Row(
-                    children: [
-                      Icon(Icons.place, color: Colors.yellow),
-                      SizedBox(width: 10),
-                      Text('Amarelo'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -169,7 +107,7 @@ class _AddHighlighterDialogState extends State<AddMarkerDialog> {
         ElevatedButton(
           onPressed: () {
             final String nome = _nomeController.text;
-            final String selectedColor = _selectedColor;
+            const String selectedColor = "Azul";
             final String selectedPosition = _selectedPosition;
             final LatLng localizacao = selectedPosition == 'Atual'
                 ? LatLng(

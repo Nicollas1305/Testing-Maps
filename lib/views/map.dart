@@ -1,9 +1,12 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:testing_maps/models/marker.dart';
-import 'package:testing_maps/providers/marker.dart';
+import 'package:testing_maps/providers/marker_provider.dart';
 import 'package:testing_maps/widgets/add_marker_dialog.dart';
 import 'package:testing_maps/widgets/add_main_marker_dialog.dart';
 import 'package:testing_maps/widgets/floating_top_bar.dart';
@@ -24,7 +27,7 @@ class _MapScreenState extends State<MapScreen> {
   LatLng _fixedMarkerPosition = const LatLng(0, 0);
   bool isAddingMarker = true;
   CameraPosition? _cameraPosition;
-  late final double _currentZoom = 18;
+  late double _currentZoom = 19;
   late final double _currentBearing = 0;
   late double _latitude = 0.0;
   late double _longitude = 0.0;
@@ -53,23 +56,6 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  double _getColorHue(String color) {
-    switch (color) {
-      case 'Verde':
-        return BitmapDescriptor.hueGreen;
-      case 'Laranja':
-        return BitmapDescriptor.hueOrange;
-      case 'Azul':
-        return BitmapDescriptor.hueBlue;
-      case 'Vermelho':
-        return BitmapDescriptor.hueRed;
-      case 'Amarelo':
-        return BitmapDescriptor.hueYellow;
-      default:
-        return BitmapDescriptor.hueRed;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final markerState = Provider.of<MarkerState>(context);
@@ -86,6 +72,18 @@ class _MapScreenState extends State<MapScreen> {
         ),
         title: const Text("Mapa"),
         actions: [
+          IconButton(
+            icon: _mapType == MapType.normal
+                ? const Icon(Icons.layers_outlined)
+                : const Icon(Icons.layers),
+            onPressed: () {
+              setState(() {
+                _mapType = _mapType == MapType.normal
+                    ? MapType.satellite
+                    : MapType.normal;
+              });
+            },
+          ),
           IconButton(
             icon: Image.asset(
               'assets/images/bussola.png',
@@ -110,18 +108,6 @@ class _MapScreenState extends State<MapScreen> {
             },
           ),
           IconButton(
-            icon: _mapType == MapType.normal
-                ? const Icon(Icons.layers_outlined)
-                : const Icon(Icons.layers),
-            onPressed: () {
-              setState(() {
-                _mapType = _mapType == MapType.normal
-                    ? MapType.satellite
-                    : MapType.normal;
-              });
-            },
-          ),
-          IconButton(
             icon: const Icon(Icons.gps_fixed),
             onPressed: () {
               if (_mapController != null) {
@@ -130,7 +116,7 @@ class _MapScreenState extends State<MapScreen> {
                   CameraUpdate.newCameraPosition(
                     CameraPosition(
                       target: LatLng(_latitude, _longitude),
-                      zoom: _currentZoom,
+                      zoom: 19,
                     ),
                   ),
                 );
@@ -139,7 +125,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'Adicionar marcador') {
                 showDialog(
                   context: context,
@@ -152,12 +138,12 @@ class _MapScreenState extends State<MapScreen> {
                       fixedMarkerLocation: _fixedMarkerPosition,
                       adicionarMarcador: (nome, cor, localizacao) {
                         final marker = MarkerModel(
-                          nome: nome,
-                          cor: cor,
-                          localizacao: localizacao,
+                          name: nome,
+                          type: 'Individuo',
+                          coordinate: localizacao,
                         );
                         markerState.addMarker(marker);
-                        print(markerState.markers.length);
+                        print(markerState.markersList.length);
                         setState(() {
                           _fixedMarkerPosition = localizacao;
                         });
@@ -166,7 +152,17 @@ class _MapScreenState extends State<MapScreen> {
                   },
                 );
               } else if (value == 'Importar .KML') {
-                // Lógica para importar .KML
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.any,
+                  //allowedExtensions: ['kml'],
+                );
+
+                if (result != null) {
+                  File kmlFile = File(result.files.single.path!);
+                  await markerState.importMarkersFromKML(context, kmlFile);
+                } else {
+                  // Usuário cancelou a seleção do arquivo
+                }
               } else if (value == 'Exportar .KML') {
                 markerState.exportMarkersAsKML(context);
               }
@@ -207,17 +203,41 @@ class _MapScreenState extends State<MapScreen> {
                     setState(() {
                       _fixedMarkerPosition = position.target;
                       // TODO: adicionar outra forma de pegar atualização do zoom
-                      //_currentZoom = position.zoom;
+                      _currentZoom = position.zoom;
                       _mapRotationAngle = position.bearing * (3.14 / 180);
-                      print(_mapRotationAngle);
                     });
                   },
                   markers: Set.from(
-                    markerState.markers.map(
+                    markerState.markersList.map(
                       (marker) {
                         return Marker(
-                          markerId: MarkerId(marker.nome),
-                          position: marker.localizacao,
+                          markerId: MarkerId(marker.name),
+                          position: marker.coordinate,
+                        );
+                      },
+                    ),
+                  ),
+                  polylines: Set.from(
+                    markerState.lineList.map(
+                      (line) {
+                        return Polyline(
+                          polylineId: PolylineId(line.name),
+                          points: line.coordinates,
+                          color: Colors.blue,
+                          width: 5,
+                        );
+                      },
+                    ),
+                  ),
+                  polygons: Set.from(
+                    markerState.polygonList.map(
+                      (polygon) {
+                        return Polygon(
+                          polygonId: PolygonId(polygon.name),
+                          points: polygon.coordinates,
+                          fillColor: Colors.green.withOpacity(0.5),
+                          strokeColor: Colors.green,
+                          strokeWidth: 2,
                         );
                       },
                     ),
@@ -270,9 +290,9 @@ class _MapScreenState extends State<MapScreen> {
                   fixedMarkerLocation: _fixedMarkerPosition,
                   adicionarMarcador: (nome, cor, localizacao) {
                     final marker = MarkerModel(
-                      nome: nome,
-                      cor: cor,
-                      localizacao: localizacao,
+                      name: nome,
+                      type: 'Parcela',
+                      coordinate: localizacao,
                     );
                     markerState.addMarker(marker);
                     setState(() {
@@ -284,9 +304,10 @@ class _MapScreenState extends State<MapScreen> {
             );
             isAddingMarker = false;
           } else {
-            if (markerState.markers.isNotEmpty) {
+            if (markerState.markersList.isNotEmpty) {
               isAddingMarker = true;
-              markerState.removeMarker(markerState.markers.first.nome);
+              markerState.removeMarker(
+                  markerState.markersList.first.name, 'Individuo');
             }
           }
         },

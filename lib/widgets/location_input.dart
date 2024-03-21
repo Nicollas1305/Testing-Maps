@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:testing_maps/providers/marker.dart';
+import 'package:testing_maps/providers/marker_provider.dart';
 import 'package:testing_maps/utils/location_util.dart';
 import 'package:testing_maps/views/map.dart';
+import 'package:utm/utm.dart';
 
 class LocationInput extends StatefulWidget {
   const LocationInput({Key? key}) : super(key: key);
@@ -12,13 +13,18 @@ class LocationInput extends StatefulWidget {
 }
 
 class _LocationInputState extends State<LocationInput> {
+  Future<String> _convertToUTM(double latitude, double longitude) async {
+    var utmCoords = UTM.fromLatLon(lat: latitude, lon: longitude);
+    return 'Easting: ${utmCoords.easting.toString()} \nNorthing: ${utmCoords.northing.toString()} \nZone: ${utmCoords.zone.toString()}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final markerState = Provider.of<MarkerState>(context);
 
     return Column(
       children: [
-        if (markerState.markers.isEmpty)
+        if (markerState.markersList.isEmpty)
           Container(
             width: MediaQuery.of(context).size.width,
             height: 120,
@@ -59,7 +65,7 @@ class _LocationInputState extends State<LocationInput> {
               ),
             ),
           ),
-        if (markerState.markers.isNotEmpty)
+        if (markerState.markersList.isNotEmpty)
           Column(
             children: [
               SizedBox(
@@ -67,8 +73,9 @@ class _LocationInputState extends State<LocationInput> {
                 width: double.infinity,
                 child: Image.network(
                   LocationUtil.generateLocationPreviewImage(
-                    latitude: markerState.markers.first.localizacao.latitude,
-                    longitude: markerState.markers.first.localizacao.longitude,
+                    latitude: markerState.markersList.first.coordinate.latitude,
+                    longitude:
+                        markerState.markersList.first.coordinate.longitude,
                   ),
                   fit: BoxFit.cover,
                 ),
@@ -95,7 +102,8 @@ class _LocationInputState extends State<LocationInput> {
                               children: [
                                 const Text('Latitude'),
                                 Text(
-                                  markerState.markers.first.localizacao.latitude
+                                  markerState
+                                      .markersList.first.coordinate.latitude
                                       .toString(),
                                 ),
                               ],
@@ -117,7 +125,7 @@ class _LocationInputState extends State<LocationInput> {
                                 const Text('Longitude'),
                                 Text(
                                   markerState
-                                      .markers.first.localizacao.longitude
+                                      .markersList.first.coordinate.longitude
                                       .toString(),
                                 ),
                               ],
@@ -128,6 +136,29 @@ class _LocationInputState extends State<LocationInput> {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 30),
+
+              // Novo Container com as coordenadas UTM convertidas
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('UTM'),
+                  FutureBuilder(
+                    future: _convertToUTM(
+                        markerState.markersList.first.coordinate.latitude,
+                        markerState.markersList.first.coordinate.longitude),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return const Text('Erro ao converter');
+                      } else {
+                        return Text(snapshot.data.toString());
+                      }
+                    },
+                  ),
+                ],
               ),
             ],
           ),

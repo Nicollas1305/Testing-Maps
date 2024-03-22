@@ -4,11 +4,13 @@ class MarkerModel {
   final String name;
   final String type;
   final LatLng coordinate;
+  BitmapDescriptor? icon;
 
   MarkerModel({
     required this.name,
     required this.type,
     required this.coordinate,
+    required this.icon,
   });
 }
 

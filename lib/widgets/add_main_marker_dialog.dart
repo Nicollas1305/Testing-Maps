@@ -37,6 +37,7 @@ class AddMainMarkerDialog extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
+                    // TODO: rever a identificação do marcador.
                     const String nome = 'identificaçãoMarcadorPrincipal';
                     const String cor = 'Verde';
                     final LatLng localizacao =

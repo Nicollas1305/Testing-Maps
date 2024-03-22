@@ -1,15 +1,38 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:testing_maps/models/marker.dart';
 import 'package:testing_maps/models/kml_exporter.dart';
 import 'package:xml/xml.dart';
+import 'package:http/http.dart' as http;
 
 class MarkerState extends ChangeNotifier {
   List<MarkerModel> markersList = [];
   List<PolygonModel> polygonList = [];
   List<LineModel> lineList = [];
+  final String customMarkerIconUrl =
+      'https://upload.wikimedia.org/wikipedia/commons/6/6d/Map_pointer_green.svg';
+
+  // TODO: Adicionar ícone via asset.
+  Future<BitmapDescriptor> getCustomMarker() async {
+    final ByteData byteData = await rootBundle.load('assets/images/logo.png');
+    final Uint8List imageData = byteData.buffer.asUint8List();
+    return BitmapDescriptor.fromBytes(imageData);
+  }
+
+  // TODO: Adicionar ícone via URL.
+  Future<BitmapDescriptor> getCustomMarkerFromUrl(String url) async {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final imageData = response.bodyBytes;
+      return BitmapDescriptor.fromBytes(imageData);
+    } else {
+      throw Exception('Falha ao carregar o ícone: ${response.statusCode}');
+    }
+  }
 
   void addMarker(MarkerModel marker) {
     switch (marker.type) {
@@ -51,36 +74,58 @@ class MarkerState extends ChangeNotifier {
 
   Future<void> exportMarkersAsKML(BuildContext context) async {
     final kmlBuilder = KMLBuilder();
-    markersList.forEach((marker) {
+    final icon = await getCustomMarkerFromUrl(customMarkerIconUrl);
+
+    final iconUrl = 'http://maps.google.com/mapfiles/kml/shapes/campfire.png';
+
+    await Future.forEach(markersList, (marker) {
       switch (marker.type) {
         case 'Individuo':
-          kmlBuilder.addPlacemark(
+          print(marker.type);
+          kmlBuilder.addPlacemarkWithIcon(
             marker.name,
             marker.coordinate.latitude,
             marker.coordinate.longitude,
+            """Indivíduo ${marker.name}.<br>
+              Nº da plaqueta: ---<br>
+              Espécie: ---<br>
+              CAP/DAP: XX,Xcm<br>
+              Altura total: XX,Xm<br>
+              Altura comercial: XX,Xm<br>
+              Qualidade: ---<br>
+              Sanidade: ---<br>
+              Material botânico coletado? Sim/Não<br>
+              Observação: ---<br>""",
+            iconUrl,
           );
           break;
         case 'Parcela':
-          kmlBuilder.addPlacemark(
+          print(marker.type);
+          kmlBuilder.addPlacemarkWithIcon(
             marker.name,
             marker.coordinate.latitude,
             marker.coordinate.longitude,
+            "Descrição da Parcela ${marker.name}.",
+            iconUrl,
           );
           break;
         default:
           throw Exception('Tipo de marcador inválido: ${marker.type}');
       }
     });
+
     polygonList.forEach((polygon) {
       kmlBuilder.addPolygon(
         polygon.name,
         polygon.coordinates,
+        polygon.color,
       );
     });
     lineList.forEach((line) {
       kmlBuilder.addLine(
         line.name,
         line.coordinates,
+        line.color,
       );
     });
 
@@ -99,7 +144,7 @@ class MarkerState extends ChangeNotifier {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Arquivo KML exportado com sucesso!'),
-        duration: Duration(seconds: 2),
+        duration: Duration(seconds: 3),
       ),
     );
   }
@@ -107,12 +152,11 @@ class MarkerState extends ChangeNotifier {
   Future<void> importMarkersFromKML(BuildContext context, File kmlFile) async {
     final xmlDoc = XmlDocument.parse(await kmlFile.readAsString());
 
-    xmlDoc.findAllElements('Placemark').forEach((element) {
+    xmlDoc.findAllElements('Placemark').forEach((element) async {
       final String name = element.findElements('name').first.text;
       final String type = determineType(element);
 
-      print(name);
-      print(type);
+      final BitmapDescriptor logoIcon = await getCustomMarker();
 
       switch (type) {
         case 'Point':
@@ -130,6 +174,7 @@ class MarkerState extends ChangeNotifier {
             name: name,
             type: 'Individuo',
             coordinate: LatLng(latitude, longitude),
+            icon: logoIcon,
           );
           addMarker(marker);
           break;

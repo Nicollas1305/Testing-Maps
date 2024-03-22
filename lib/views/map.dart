@@ -60,6 +60,9 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final markerState = Provider.of<MarkerState>(context);
 
+    final logoIcon =
+        Provider.of<MarkerState>(context, listen: false).getCustomMarker();
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
@@ -136,11 +139,12 @@ class _MapScreenState extends State<MapScreen> {
                         _longitude,
                       ),
                       fixedMarkerLocation: _fixedMarkerPosition,
-                      adicionarMarcador: (nome, cor, localizacao) {
+                      adicionarMarcador: (nome, cor, localizacao) async {
                         final marker = MarkerModel(
                           name: nome,
                           type: 'Individuo',
                           coordinate: localizacao,
+                          icon: await logoIcon,
                         );
                         markerState.addMarker(marker);
                         print(markerState.markersList.length);
@@ -214,6 +218,7 @@ class _MapScreenState extends State<MapScreen> {
                         return Marker(
                           markerId: MarkerId(marker.name),
                           position: marker.coordinate,
+                          icon: marker.icon!,
                         );
                       },
                     ),
@@ -290,11 +295,12 @@ class _MapScreenState extends State<MapScreen> {
                 return AddMainMarkerDialog(
                   userLocation: LatLng(_latitude, _longitude),
                   fixedMarkerLocation: _fixedMarkerPosition,
-                  adicionarMarcador: (nome, cor, localizacao) {
+                  adicionarMarcador: (nome, cor, localizacao) async {
                     final marker = MarkerModel(
                       name: nome,
                       type: 'Parcela',
                       coordinate: localizacao,
+                      icon: await logoIcon,
                     );
                     markerState.addMarker(marker);
                     setState(() {

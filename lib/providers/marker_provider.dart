@@ -137,7 +137,7 @@ class MarkerState extends ChangeNotifier {
         ? await getExternalStorageDirectory()
         : await getApplicationDocumentsDirectory();
 
-    final file = File('${directory!.path}/markers.kml');
+    final file = File('${directory!.path}/IFlorestal_Inventree.kml');
     print(file);
     await file.writeAsString(kmlString);
 
@@ -152,10 +152,24 @@ class MarkerState extends ChangeNotifier {
   Future<void> importMarkersFromKML(BuildContext context, File kmlFile) async {
     final xmlDoc = XmlDocument.parse(await kmlFile.readAsString());
 
+    final Map<String, String> styleColors = {};
+
+    xmlDoc.findAllElements('Style').forEach((styleElement) {
+      final String styleId = styleElement.getAttribute('id')!;
+      final String? color = styleElement
+          .findElements('PolyStyle')
+          .first
+          .findElements('color')
+          .firstOrNull
+          ?.text;
+      if (color != null) {
+        styleColors[styleId] = color;
+      }
+    });
+
     xmlDoc.findAllElements('Placemark').forEach((element) async {
       final String name = element.findElements('name').first.text;
       final String type = determineType(element);
-
       final BitmapDescriptor logoIcon = await getCustomMarker();
 
       switch (type) {
@@ -193,12 +207,17 @@ class MarkerState extends ChangeNotifier {
             final double longitude = double.parse(latLng[0]);
             return LatLng(latitude, longitude);
           }).toList();
-          final line = LineModel(
-            name: name,
-            color: 'TODO', // TODO: Adicionar cor a linha
-            coordinates: points,
-          );
-          addLine(line);
+          final String styleUrl =
+              element.findElements('styleUrl').first.text.substring(1);
+          final String? color = styleColors[styleUrl];
+          if (color != null) {
+            final line = LineModel(
+              name: name,
+              color: color,
+              coordinates: points,
+            );
+            addLine(line);
+          }
           break;
         case 'Polygon':
           final coordinates = element
@@ -219,12 +238,17 @@ class MarkerState extends ChangeNotifier {
             final double longitude = double.parse(latLng[0]);
             return LatLng(latitude, longitude);
           }).toList();
-          final polygon = PolygonModel(
-            name: name,
-            color: 'TODO', // TODO: Adicionar cor ao Polygon
-            coordinates: points,
-          );
-          addPolygon(polygon);
+          final String styleUrl =
+              element.findElements('styleUrl').first.text.substring(1);
+          final String? color = styleColors[styleUrl];
+          if (color != null) {
+            final polygon = PolygonModel(
+              name: name,
+              color: color,
+              coordinates: points,
+            );
+            addPolygon(polygon);
+          }
           break;
       }
     });

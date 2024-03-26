@@ -229,8 +229,8 @@ class _MapScreenState extends State<MapScreen> {
                         return Polyline(
                           polylineId: PolylineId(line.name),
                           points: line.coordinates,
-                          color: Colors.blue,
-                          width: 5,
+                          color: line.color,
+                          width: line.width,
                         );
                       },
                     ),
@@ -241,9 +241,9 @@ class _MapScreenState extends State<MapScreen> {
                         return Polygon(
                           polygonId: PolygonId(polygon.name),
                           points: polygon.coordinates,
-                          fillColor: Colors.green.withOpacity(0.5),
-                          strokeColor: Colors.green,
-                          strokeWidth: 2,
+                          fillColor: polygon.color.withOpacity(0.5),
+                          strokeColor: polygon.color,
+                          strokeWidth: polygon.lineWidth,
                         );
                       },
                     ),

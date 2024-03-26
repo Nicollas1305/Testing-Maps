@@ -1,4 +1,4 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:testing_maps/models/marker.dart';
 import 'package:xml/xml.dart';
 
 class KMLBuilder {
@@ -9,42 +9,26 @@ class KMLBuilder {
     ])
   ]);
 
-  void addPlacemark(String name, double latitude, double longitude) {
+  void addPolygon(PolygonModel polygon) {
     final documentElement = _document.rootElement.getElement('Document');
-    documentElement?.children.add(
-      XmlElement(
-        XmlName('Placemark'),
-        [],
-        [
-          XmlElement(XmlName('name'), [], [XmlText(name)]),
-          XmlElement(
-            XmlName('Point'),
-            [],
-            [
-              XmlElement(
-                XmlName('coordinates'),
-                [],
-                [XmlText('$longitude,$latitude')],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void addPolygon(String name, List<LatLng> coordinates, String color) {
-    final documentElement = _document.rootElement.getElement('Document');
-    final List<String> coordinatesList = coordinates
+    final List<String> coordinatesList = polygon.coordinates
         .map((coord) => '${coord.longitude},${coord.latitude}')
         .toList();
+    final String colorString =
+        polygon.color.value.toRadixString(16).substring(2);
+    final String lineOpacity =
+        (polygon.lineOpacity * 255).toInt().toRadixString(16).padLeft(2, '0');
+    final String areaOpacity =
+        (polygon.areaOpacity * 255).toInt().toRadixString(16).padLeft(2, '0');
 
     documentElement?.children.add(
       XmlElement(
         XmlName('Placemark'),
         [],
         [
-          XmlElement(XmlName('name'), [], [XmlText(name)]),
+          XmlElement(XmlName('name'), [], [XmlText(polygon.name)]),
+          XmlElement(
+              XmlName('description'), [], [XmlText(polygon.description)]),
           XmlElement(
             XmlName('Style'),
             [],
@@ -53,14 +37,18 @@ class KMLBuilder {
                 XmlName('LineStyle'),
                 [],
                 [
-                  XmlElement(XmlName('color'), [], [XmlText(color)]),
+                  XmlElement(XmlName('color'), [],
+                      [XmlText('$lineOpacity$colorString')]),
+                  XmlElement(XmlName('width'), [],
+                      [XmlText(polygon.lineWidth.toString())]),
                 ],
               ),
               XmlElement(
                 XmlName('PolyStyle'),
                 [],
                 [
-                  XmlElement(XmlName('color'), [], [XmlText(color)]),
+                  XmlElement(XmlName('color'), [],
+                      [XmlText('$areaOpacity$colorString')]),
                 ],
               ),
             ],
@@ -93,18 +81,21 @@ class KMLBuilder {
     );
   }
 
-  void addLine(String name, List<LatLng> coordinates, String color) {
+  void addLine(LineModel line) {
     final documentElement = _document.rootElement.getElement('Document');
-    final List<String> coordinatesList = coordinates
+    final List<String> coordinatesList = line.coordinates
         .map((coord) => '${coord.longitude},${coord.latitude}')
         .toList();
+    final String colorString = line.color.value.toRadixString(16).substring(2);
+    final String opacity =
+        (line.opacity * 255).toInt().toRadixString(16).padLeft(2, '0');
 
     documentElement?.children.add(
       XmlElement(
         XmlName('Placemark'),
         [],
         [
-          XmlElement(XmlName('name'), [], [XmlText(name)]),
+          XmlElement(XmlName('name'), [], [XmlText(line.name)]),
           XmlElement(
             XmlName('Style'),
             [],
@@ -113,7 +104,10 @@ class KMLBuilder {
                 XmlName('LineStyle'),
                 [],
                 [
-                  XmlElement(XmlName('color'), [], [XmlText(color)]),
+                  XmlElement(
+                      XmlName('color'), [], [XmlText('$opacity$colorString')]),
+                  XmlElement(
+                      XmlName('width'), [], [XmlText(line.width.toString())]),
                 ],
               ),
             ],
@@ -134,7 +128,7 @@ class KMLBuilder {
     );
   }
 
-  void addPlacemarkWithIcon(
+  void addPlacemark(
     String name,
     double latitude,
     double longitude,
